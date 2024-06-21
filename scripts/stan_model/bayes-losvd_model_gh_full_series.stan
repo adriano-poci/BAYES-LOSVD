@@ -105,7 +105,7 @@ data {
   int<lower=1> ntemp;                    // Number of PC components
   int<lower=1> npix_temp;                // Number of pixels of each PC components
   int<lower=1> nmask;                    // Number of pixels of the mask
-  int<lower=1> mask[nmask];              // Mask with pixels to be fitted
+  array[nmask] int mask;                 // Mask with pixels to be fitted
   int<lower=0> porder;                   // Polynomial order to be used
   real<lower=0> velscale;                // Velocity scale
   int<lower=1> nvel;                     // Number of pixels of the LOSVD

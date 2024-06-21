@@ -4,8 +4,8 @@ from   astropy.io         import fits
 def read_data(filename):
 
     hdu = fits.open(filename)
-    if len(hdu) < 2:
-        print("ERROR: The CALIFA datacube needs 2 extensions: [0] Data, [1] Dispersion")
+    if len(hdu) > 2:
+        print("ERROR: The datafile needs 2 extensions: [0] Data, [1] Dispersion")
         exit()
 
     #---------------------------

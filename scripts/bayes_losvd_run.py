@@ -4,6 +4,7 @@ import glob
 import h5py
 import pickle
 import stan
+import time
 import optparse
 import threading
 import warnings
@@ -56,7 +57,7 @@ def run(i, bin_list, runname, nsamples, nchain, adapt_delta, max_treedepth,
                   'ntemp':         np.array(struct['in/ntemp']), 
                   'nvel':          np.array(struct['in/nvel']),
                   'npix_temp':     np.array(struct['in/npix_temp']),
-                  'mask':          np.array(struct['in/mask']), 
+                  'mask':          np.array(struct['in/mask'])+1, # to comply with the 1 indexing in Stan
                   'nmask':         np.array(struct['in/nmask']), 
                   'porder':        np.array(struct['in/porder']),
                   'spec_obs':      np.array(struct['in/spec_obs'][:,idx]), 
@@ -64,7 +65,8 @@ def run(i, bin_list, runname, nsamples, nchain, adapt_delta, max_treedepth,
                   'templates':     np.array(struct['in/templates']),
                   'mean_template': np.array(struct['in/mean_template']),
                   'velscale':      np.array(struct['in/velscale']),
-                  'xvel':          np.array(struct['in/xvel'])}
+                  'xvel':          np.array(struct['in/xvel']),
+                  'grainsize': 2000}
 
         # Adding any extra parameter needed for that particular fit_type
         for key, val in extrapars.items():
@@ -74,7 +76,9 @@ def run(i, bin_list, runname, nsamples, nchain, adapt_delta, max_treedepth,
         with open(codefile, 'r') as myfile:
            code = myfile.read()
         posterior = stan.build(code, data=data)
+        dummy = time.time()
         samples = posterior.sample(num_chains=nchain, num_samples=nsamples)
+        print("\n  Elapsed time: ",time.time()-dummy," seconds")
         
         # If requested, saving sample chains
         if (save_chains == True):

@@ -75,7 +75,7 @@ data {
   int<lower=1> npix_temp;                // Number of pixels of each PC components
   int<lower=1> nvel;                     // Number of pixels of the LOSVD
   int<lower=1> nmask;                    // Number of pixels of the mask
-  int<lower=1> mask[nmask];              // Mask with pixels to be fitted
+  array[nmask] int mask;                 // Mask with pixels to be fitted
   int<lower=0> porder;                   // Polynomial order to be used
   //-------------------------
   vector[npix_obs]            spec_obs;      // Array with observed spectrum
@@ -90,25 +90,25 @@ transformed data{
   vector[npix_obs]          vect     = create_vector(npix_obs);
   vector[npix_obs]          scl_vect = scale_vector(vect,npix_obs);
   matrix[npix_obs,porder+1] leg_pols = legendre(scl_vect,porder,npix_obs);
-
+  
 }    
 //=============================================================================
 parameters {
   
-  simplex[nvel] losvd;                            // LOSVD array                   
-  vector<lower=-2.0,upper=2.0>[ntemp]    weights; // Weights for each PC component
-  vector<lower=-2.0,upper=2.0>[porder+1] coefs;   // Coefficients of the polynomials
-  real<lower=0.0> sigma;                          // The dispersion of the LOSVD prior
+  simplex[nvel]     losvd;   // LOSVD array                   
+  vector[ntemp]     weights; // Weights for each PC component
+  vector[porder+1]  coefs;   // Coefficients of the polynomials
+  real<lower=1E-10> sigma;   // The dispersion of the LOSVD prior
 
 }
 //=============================================================================
 model {
-            
+
   // Defining model  
   vector[npix_temp] spec       = mean_template + templates * weights;       
   vector[npix_obs]  conv_spec  = convolve_data(spec,losvd,npix_obs,nvel);
   vector[npix_obs]  model_spec = leg_pols * coefs + conv_spec;
-
+  
   // Weakly informative priors on PCA weights, polynomial coeffs and LOSVD
   coefs   ~ normal(0.0,1.0);
   weights ~ normal(0.0,1.0);
@@ -117,7 +117,7 @@ model {
 
   // Inference
   spec_obs[mask] ~ normal(model_spec[mask],sigma_obs[mask]);
-
+  
 }
 //=============================================================================
 generated quantities {

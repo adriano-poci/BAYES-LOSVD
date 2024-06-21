@@ -75,7 +75,7 @@ data {
   int<lower=1> npix_temp;                // Number of pixels of each PC components
   int<lower=1> nvel;                     // Number of pixels of the LOSVD
   int<lower=1> nmask;                    // Number of pixels of the mask
-  int<lower=1> mask[nmask];              // Mask with pixels to be fitted
+  array[nmask] int mask;                 // Mask with pixels to be fitted
   int<lower=0> porder;                   // Polynomial order to be used
   //-------------------------
   vector[npix_obs]            spec_obs;      // Array with observed spectrum
@@ -102,7 +102,7 @@ parameters {
 
   // Parameters for the Autoregressive LOSVD smoothing
   real<lower=-1.0, upper=1.0> alpha;
-  real<lower=-2.0, upper=2.0> beta[order];
+  array[order] real<lower=-2.0, upper=2.0> beta;
   real<lower= 0.0, upper=1.0> sigma; 
   
 }
