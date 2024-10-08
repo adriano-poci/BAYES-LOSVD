@@ -46,7 +46,10 @@ def load_templates(struct,data_struct):
    wave = hdr['CRVAL1']+np.arange(len(tmp))*hdr['CDELT1']
    dwav = hdr['CDELT1']
    npix = len(wave)
-   
+
+   if temp_name == "SINFONI":
+       wave *= 1E4 # to put it in angstroms
+
    # Defining output arrays
    temp  = np.zeros((npix,ntemp))
    scale = np.zeros(ntemp)
@@ -92,20 +95,21 @@ def load_templates(struct,data_struct):
        ntemplates = ntemp
 
    # Convolving the templates to match the data's LSF
-   print(" - Convolving the templates to match the data's LSF")
-   data_lsf   = misc.read_lsf(wave, lsf_data_file)
-   data_lsf  /= (1.0 + redshift) 
-   temp_lsf   = misc.read_lsf(wave, lsf_temp_file)
-   fwhm_diff  = np.sqrt(data_lsf**2 - temp_lsf**2)  # in angstroms
-   bad_pix    = np.isnan(fwhm_diff)
-   if np.sum(bad_pix) > 0:
-       misc.printWARNING("Some values of the data LSF are below the templates values")
-   fwhm_diff[bad_pix] = 1E-2  # Fixing the FWHM_diff to a tiny value if there are NaNs
-   sigma_diff = fwhm_diff/2.355/dwav
-
-   mean_temp = cap.gaussian_filter1d(mean_temp,sigma_diff)
-   for i in trange(ntemplates, ascii=True, leave=False):
-      templates[:,i] = cap.gaussian_filter1d(templates[:,i], sigma_diff)  # convolution with variable sigma
+   if lsf_data_file != lsf_temp_file:
+      print(" - Convolving the templates to match the data's LSF")
+      data_lsf   = misc.read_lsf(wave, lsf_data_file)
+      data_lsf  /= (1.0 + redshift) 
+      temp_lsf   = misc.read_lsf(wave, lsf_temp_file)
+      fwhm_diff  = np.sqrt(data_lsf**2 - temp_lsf**2)  # in angstroms
+      bad_pix    = np.isnan(fwhm_diff)
+      if np.sum(bad_pix) > 0:
+          misc.printWARNING("Some values of the data LSF are below the templates values")
+      fwhm_diff[bad_pix] = 1E-2  # Fixing the FWHM_diff to a tiny value if there are NaNs
+      sigma_diff = fwhm_diff/2.355/dwav
+      
+      mean_temp = cap.gaussian_filter1d(mean_temp,sigma_diff)
+      for i in trange(ntemplates, ascii=True, leave=False):
+         templates[:,i] = cap.gaussian_filter1d(templates[:,i], sigma_diff)  # convolution with variable sigma
    
    # Log-rebinning the PCA spectra using the data's velscale
    print(" - Log-rebinning the templates")
@@ -123,7 +127,7 @@ def load_templates(struct,data_struct):
    good  = (lwave >= np.log(data_struct['lmin'])) & (lwave <= np.log(data_struct['lmax']))
    check = np.array_equal(lwave[good], data_struct['wave_obs'])
    if check == False:
-       print(" - Resampling the templates to match the wavelength of the observed data (if needed)")
+       print(" - Resampling the templates to match the wavelength of the observed data")
        mean_temp = misc.spectres(data_struct['wave_obs'], lwave, mean_temp, fill=np.nan)
        npix_temp = len(mean_temp)
        new_temp  = np.zeros((npix_temp,ntemplates))
