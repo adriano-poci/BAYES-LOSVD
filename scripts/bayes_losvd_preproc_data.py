@@ -7,6 +7,7 @@ import numpy              as np
 import matplotlib.pyplot  as plt
 import lib.misc_functions as misc
 from   lib.load_data      import load_data
+from   lib.load_ngist     import load_ngist
 from   lib.load_testdata  import load_testdata
 from   lib.load_templates import load_templates
 from   lib.cap_utils      import display_bins
@@ -49,7 +50,11 @@ def run_preproc_data(rname, struct):
 
     # Processing data
     print("# Processing data .....") 
-    data_struct = load_data(struct)
+    if 'ngist_config' in struct.keys():
+        ngist = struct['ngist_config']
+        data_struct = load_ngist(struct, ngist)
+    else:
+        data_struct = load_data(struct)
 
     # Processing templates 
     print("# Processing templates .....") 
